@@ -2,6 +2,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import arange
+from matplotlib import pyplot
+from matplotlib.patches import Polygon
 import math
 
 #(a1, a2, a3)
@@ -25,6 +27,17 @@ def check_arrea(R, point):
 	return False
 
 
+def plot_sq(points, R):
+	plt.axhline(y=0, color='k')
+	plt.axvline(x=0, color='k')
+	plt.axhline(y=R[1], color='r')
+	plt.axvline(x=R[0], color='r')
+	poly = Polygon(points,edgecolor='none')
+ 	plt.gca().add_patch(poly)
+ 	plt.axis([0, R[0]*2, 0, R[1]*2])
+ 	plt.show()
+
+
 def create_sq(h, w, angle, R, flag=False):
 	def solve(eq1, eq2):
 		a = np.array([[eq1[0], eq1[1]], [eq2[0], eq2[1]]])
@@ -39,36 +52,31 @@ def create_sq(h, w, angle, R, flag=False):
 	c2 = get_coeffs(90 + angle, (R[0]-w/2,R[1]))
 
 	solver = lambda x:solve(x[0], x[1])
-	points = map(solver, zip([r1, r1], [c1,c2]))+map(solver, zip([r2, r2], [c1,c2]))
-	
-	if(flag):
-		# plt.grid(True, which='both')
-		plt.axhline(y=0, color='k')
-		plt.axvline(x=0, color='k')
-		plt.axhline(y=R[1], color='r')
-		plt.axvline(x=R[0], color='r')
-	
-		plt.plot(map(convert_to_f(r1), range(-5,5)),range(-5,5),color="b")
-		plt.plot(map(convert_to_f(r2), range(-5,5)),range(-5,5),color="b")
-		plt.plot(map(convert_to_f(c1), range(-5,5)),range(-5,5),color="b")
-		plt.plot(map(convert_to_f(c2), range(-5,5)),range(-5,5),color="b")
-		plt.axis([-0.5, 2, -0.5, 2])
-
-		plt.show()
-
-	return map(lambda x:check_arrea(R,x), points)
+	# points = map(solver, zip([r1, r1], [c1,c2]))+map(solver, zip([r2, r2], [c1,c2]))
+	points = [solve(r2, c1), solve(r1, c1), solve(r1,c2), solve(r2,c2)]
+	return (points, map(lambda x:check_arrea(R,x), points))
 
 
 def main():
 	angle = 45
-	R = (1,1)
-	factor_a =  [x/100.0 for x in range(1,500,1)]
-	factor_b =  [x/100.0 for x in range(1,500,1)]
+	R = (2,2)
+	#range_factor = convert offsets to current corner
+	range_factor = math.sqrt(R[0]+R[1])
+	factor_a =  [range_factor*x/100.0 for x in range(1,500,1)]
+	factor_b =  [range_factor*x/100.0 for x in range(1,500,1)]
 	plan = [[a,b] for a in factor_a for b in factor_b]
 	adapter = lambda x : create_sq(x[0], x[1],angle,R)
 	results = zip(plan, map(adapter, plan))
-	filtered_results = filter(lambda x: sum(x[1])>3, results)
-	for x in map(lambda x:sum(x[0]) , filtered_results):
-		print(x)
+	filtered_results = filter(lambda x: sum(x[1][1])>3, results)
+	sorted_results = sorted(filtered_results, key=lambda x:x[0][0]*x[0][1], reverse=True)
+	points = sorted_results[0][1][0]
+	print("max sqr: ",(sorted_results[0][0][0]*sorted_results[0][0][1])/(range_factor*1.0))
+
+	plot_sq(points, R)
+	
+	
+	# sqrs = map(lambda x:x[0][0]*x[0][1] , filtered_results)
+	# sqrs.sort()
+	# print(sqrs[-1])
 if __name__ == '__main__':
 	main()	
