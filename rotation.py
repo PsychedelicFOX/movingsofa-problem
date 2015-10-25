@@ -20,7 +20,6 @@ def get_coeffs(angle, R):
 def convert_to_f(coeffs, offset=0):
 	return lambda x: (1.0 / coeffs[1])*(-coeffs[0]*x -coeffs[2])
 
-
 def check_arrea(R, point):
 	if ( ( (point[0]<=R[0])&(point[0]>=0)&(point[1]>=0)) or ((point[0]>=R[0])&(point[1]>=0)&(point[1]<=R[1]) ) ):
 		return True
@@ -47,23 +46,26 @@ def create_sq(h, w, angle, R, flag=False):
 
 	r1 = get_coeffs(angle, (R[0],R[1]))
 	r2 = get_coeffs(angle, (R[0]-h/2.0,R[1]-h/2.0))
-	
+
 	c1 = get_coeffs(90 + angle, (R[0]+w/2,R[1]))
 	c2 = get_coeffs(90 + angle, (R[0]-w/2,R[1]))
 
 	solver = lambda x:solve(x[0], x[1])
 	# points = map(solver, zip([r1, r1], [c1,c2]))+map(solver, zip([r2, r2], [c1,c2]))
 	points = [solve(r2, c1), solve(r1, c1), solve(r1,c2), solve(r2,c2)]
+	if flag:
+		plot_sq(points,R)
 	return (points, map(lambda x:check_arrea(R,x), points))
 
 
 def main():
 	angle = 45
-	R = (2,2)
-	#range_factor = convert offsets to current corner
-	range_factor = math.sqrt(R[0]+R[1])
-	factor_a =  [range_factor*x/100.0 for x in range(1,500,1)]
-	factor_b =  [range_factor*x/100.0 for x in range(1,500,1)]
+	R = (1 ,1 )
+	#range_factor = convert offsets to current corridor width
+	# range_factor = math.sqrt(R[0]+R[1])
+	range_factor = 2
+	factor_a =  [range_factor*x/10.0 for x in range(1,100,1)]
+	factor_b =  [range_factor*x/10.0 for x in range(1,100,1)]
 	plan = [[a,b] for a in factor_a for b in factor_b]
 	adapter = lambda x : create_sq(x[0], x[1],angle,R)
 	results = zip(plan, map(adapter, plan))
@@ -73,10 +75,10 @@ def main():
 	print("max sqr: ",(sorted_results[0][0][0]*sorted_results[0][0][1])/(range_factor*1.0))
 
 	plot_sq(points, R)
-	
-	
+
+
 	# sqrs = map(lambda x:x[0][0]*x[0][1] , filtered_results)
 	# sqrs.sort()
 	# print(sqrs[-1])
 if __name__ == '__main__':
-	main()	
+	main()
